@@ -20,6 +20,7 @@ namespace ConsoleUI
             brandManager.Add(new Brand { Id = 3, BrandName = "Toyota" });
 
             //carManager.Add(new Car { Id = 1, BrandId = 3, ColorId = 2, Description = "BMW", DailyPrice = 100, ModelYear = 2020 });
+            //carManager.Add(new Car { Id = 2, BrandId = 3, ColorId = 2, Description = "Mercedes", DailyPrice = 100, ModelYear = 2020 });
             carManager.Add(new Car { Id = 2, BrandId = 3, ColorId = 2, Description = "Mercedes", DailyPrice = 100, ModelYear = 2020 });
 
             foreach (var car in carManager.GetAll())
