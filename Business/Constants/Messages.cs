@@ -13,6 +13,6 @@ namespace Business.Constants
         public static string CarsDeleted = "arabalar silindi";
         public static string CarError = "hata!!";
         public static string CarUpdated = "güncelleme yapıldı";
-
+        public static string CarImageLimitExceded ="limit kontrol";
     }
 }
