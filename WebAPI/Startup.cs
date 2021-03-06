@@ -14,6 +14,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Core.DependencyResolvers;
+using Core.Extensions;
 using Core.IoC;
 using Core.Utilities.Security.Encyption;
 using Microsoft.AspNetCore.Http;
@@ -37,7 +39,7 @@ namespace WebAPI
         {
             services.AddControllers();
              
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+           
 
             var tokenOptions = Configuration.GetSection("TokenOptions").Get<TokenOptions>();
 
@@ -55,7 +57,10 @@ namespace WebAPI
                         IssuerSigningKey = SecurityKeyHelper.CreateSecurityKey(tokenOptions.SecurityKey)
                     };
                 });
-            ServiceTool.Create(services);
+            services.AddDependencyResolvers(new ICoreModule[]
+            {
+                new CoreModule()
+            });
             //services.AddSingleton<ICarService, CarManager>();
             //services.AddSingleton<ICarDal, EfCarDal>();
             //services.AddSingleton<IBrandService, BrandManager>();
