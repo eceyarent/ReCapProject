@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Autofac.Core;
 using Core.DependencyResolvers;
 using Core.Extensions;
 using Core.IoC;
@@ -38,8 +39,8 @@ namespace WebAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-             
-           
+
+            services.AddCors();
 
             var tokenOptions = Configuration.GetSection("TokenOptions").Get<TokenOptions>();
 
@@ -82,7 +83,8 @@ namespace WebAPI
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.UseStaticFiles();
+
+            app.UseCors(builder=>builder.WithOrigins("http://localhost:4200").AllowAnyHeader());
 
             app.UseHttpsRedirection();
 
@@ -96,6 +98,7 @@ namespace WebAPI
             {
                 endpoints.MapControllers();
             });
+            app.UseStaticFiles();
         }
     }
 }
