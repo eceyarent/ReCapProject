@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Core.Utilities.Helpers;
+using Microsoft.AspNetCore.Http;
 
 namespace Business.Concrete
 {
@@ -20,62 +22,78 @@ namespace Business.Concrete
             _carImageDal = carImageDal;
         }
 
-        public IResult Add(CarImage carImage)
+        public IResult Add(IFormFile file, CarImage carImage)
         {
-            IResult result = BusinessRules.Run(CheckIfCarImageLimit(carImage.CarId), 
-            CheckIfCarImageNull(carImage.CarId));
-           
+            IResult result = BusinessRules.Run(CheckIfImageLimitExceeded(carImage.CarId));
+
             if (result != null)
             {
                 return result;
             }
-       
-            _carImageDal.Add(carImage);
 
-            return new SuccessResult(Messages.CarAdded);
+            carImage.ImagePath = FileHelper.Add(file);
+            carImage.Date = DateTime.Now;
+            _carImageDal.Add(carImage);
+            return new SuccessResult();
+        }
+
+        public IResult Update(IFormFile file, CarImage carImage)
+        {
+            carImage.ImagePath = FileHelper.Update(_carImageDal.Get(p => p.Id == carImage.Id).ImagePath, file);
+            carImage.Date = DateTime.Now;
+            _carImageDal.Update(carImage);
+            return new SuccessResult();
         }
 
         public IResult Delete(CarImage carImage)
         {
-            _carImageDal.Add(carImage);
-            return new SuccessResult(Messages.CarsDeleted);
+            FileHelper.Delete(carImage.ImagePath);
+            _carImageDal.Delete(carImage);
+            return new SuccessResult();
         }
 
         public IDataResult<List<CarImage>> GetAll()
         {
-            return new SuccessDataResult<List<CarImage>>(_carImageDal.GetAll(), Messages.CarsListed);
+            return new SuccessDataResult<List<CarImage>>(_carImageDal.GetAll());
+        }
+
+        public IDataResult<List<CarImage>> GetImagesByCarId(int id)
+        {
+            IResult result = BusinessRules.Run(CheckIfCarImageNull(id));
+
+            if (result != null)
+            {
+                return new ErrorDataResult<List<CarImage>>(result.Message);
+            }
+
+            return new SuccessDataResult<List<CarImage>>(CheckIfCarImageNull(id).Data);
         }
 
         public IDataResult<CarImage> GetById(int id)
         {
-            return new SuccessDataResult<CarImage>(_carImageDal.Get(i => i.Id == id), Messages.CarsListed); ;
+            return new SuccessDataResult<CarImage>(_carImageDal.Get(p => p.Id == id));
         }
 
-        public IResult Update(CarImage carImage)
+        //business rules
+        private IResult CheckIfImageLimitExceeded(int carId)
         {
-            _carImageDal.Add(carImage);
-            return new SuccessResult(Messages.CarUpdated);
-        }
-
-        private IResult CheckIfCarImageLimit (int id)
-        {
-            var result = _carImageDal.GetAll(c => c.CarId == id).Count;
-            if (result >= 5)
+            var carImagecount = _carImageDal.GetAll(p => p.CarId == carId).Count;
+            if (carImagecount >= 5)
             {
-                return new ErrorResult(Messages.CarImageLimitExceded);
+                return new ErrorResult("5'den fazla resim eklenemez");
             }
-            return new SuccessResult(); 
+
+            return new SuccessResult();
         }
 
         private IDataResult<List<CarImage>> CheckIfCarImageNull(int id)
         {
-
             try
             {
-                string path = @"\uploads\default.jpg";
                 var result = _carImageDal.GetAll(c => c.CarId == id).Any();
                 if (!result)
                 {
+                    string path = @"\uploads\default.jpg";
                     List<CarImage> carimage = new List<CarImage>();
                     carimage.Add(new CarImage { CarId = id, ImagePath = path, Date = DateTime.Now });
                     return new SuccessDataResult<List<CarImage>>(carimage);
@@ -83,15 +101,16 @@ namespace Business.Concrete
             }
             catch (Exception exception)
             {
-
                 return new ErrorDataResult<List<CarImage>>(exception.Message);
             }
 
-            return new SuccessDataResult<List<CarImage>>(_carImageDal.GetAll(c => c.CarId == id).ToList());
+            return new SuccessDataResult<List<CarImage>>(_carImageDal.GetAll(p => p.CarId == id).ToList());
         }
 
-    }
 
+
+
+    }
 
 }
 
